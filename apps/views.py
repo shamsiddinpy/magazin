@@ -2,7 +2,7 @@ from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.filters import SearchFilter, OrderingFilter
-from rest_framework.generics import CreateAPIView, ListCreateAPIView
+from rest_framework.generics import CreateAPIView, ListCreateAPIView, DestroyAPIView, get_object_or_404
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -61,3 +61,12 @@ class CartModelViewSet(ListCreateAPIView):
         serializer.save(cart=cart)
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+
+@extend_schema(tags=['Cart'])
+class CartDestroyAPIView(DestroyAPIView):
+
+    def destroy(self, request, *args, **kwargs):
+        cart_item = get_object_or_404(CartItem, pk=kwargs['pk'], cart__user=request.user)
+        cart_item.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
