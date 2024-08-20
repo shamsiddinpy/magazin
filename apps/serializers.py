@@ -1,14 +1,9 @@
 from django.contrib.auth.models import User
+from django.shortcuts import get_object_or_404
 from rest_framework.serializers import ModelSerializer
 from rest_framework.exceptions import ValidationError
 
 from apps.models import Product, Cart, CartItem
-
-
-class ProductModelSerializer(ModelSerializer):
-    class Meta:
-        model = Product
-        fields = '__all__'
 
 
 class UserModelSerializer(ModelSerializer):
@@ -39,6 +34,12 @@ class UserModelSerializer(ModelSerializer):
         return data
 
 
+class ProductModelSerializer(ModelSerializer):
+    class Meta:
+        model = Product
+        fields = '__all__'
+
+
 class CartModelSerializer(ModelSerializer):
     class Meta:
         model = Cart
@@ -53,19 +54,22 @@ class CartItemSerializer(ModelSerializer):
         model = CartItem
         fields = "__all__"
 
-    def create(self, validated_data):
-        request = self.context['request']
-        user = request.user
-        product = validated_data.get('product')
-        quantity = validated_data.get('quantity', 1)
-        user_cart, created = Cart.objects.get_or_create(user=user)
 
+class CartItemCreateSerializer(ModelSerializer):
+    class Meta:
+        model = CartItem
+        fields = ['product', 'quantity']
+
+    def create(self, validated_data):
+        cart = self.context['cart']
+        product_id = validated_data.get('product_id')
+        quantity = validated_data.get('quantity', 1)
+        product = get_object_or_404(Product, id=product_id)
         cart_item, created = CartItem.objects.get_or_create(
-            cart=user_cart,
+            cart=cart,
             product=product,
             defaults={'quantity': quantity}
         )
-
         if not created:
             cart_item.quantity += quantity
             cart_item.save()
