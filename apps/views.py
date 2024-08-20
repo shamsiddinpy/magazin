@@ -8,7 +8,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
-from apps.models import Product
+from apps.models import Product, Cart, CartItem
 from apps.serializers import ProductModelSerializer, CartItemCreateSerializer
 from apps.serializers import UserModelSerializer
 
@@ -50,3 +50,14 @@ class UserRegistrationView(CreateAPIView):
 @extend_schema(tags=['Cart'])
 class CartModelViewSet(ListCreateAPIView):
     serializer_class = CartItemCreateSerializer
+
+    def get_queryset(self):
+        return CartItem.objects.filter(cart__user=self.request.user)
+
+    def create(self, request, *args, **kwargs):
+        cart, created = Cart.objects.get_or_create(user=self.request.user)
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(cart=cart)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)

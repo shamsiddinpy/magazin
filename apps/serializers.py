@@ -6,6 +6,12 @@ from rest_framework.exceptions import ValidationError
 from apps.models import Product, Cart, CartItem
 
 
+class ProductModelSerializer(ModelSerializer):
+    class Meta:
+        model = Product
+        fields = '__all__'
+
+
 class UserModelSerializer(ModelSerializer):
     class Meta:
         model = User
@@ -34,12 +40,6 @@ class UserModelSerializer(ModelSerializer):
         return data
 
 
-class ProductModelSerializer(ModelSerializer):
-    class Meta:
-        model = Product
-        fields = '__all__'
-
-
 class CartModelSerializer(ModelSerializer):
     class Meta:
         model = Cart
@@ -59,18 +59,3 @@ class CartItemCreateSerializer(ModelSerializer):
     class Meta:
         model = CartItem
         fields = ['product', 'quantity']
-
-    def create(self, validated_data):
-        cart = self.context['cart']
-        product_id = validated_data.get('product_id')
-        quantity = validated_data.get('quantity', 1)
-        product = get_object_or_404(Product, id=product_id)
-        cart_item, created = CartItem.objects.get_or_create(
-            cart=cart,
-            product=product,
-            defaults={'quantity': quantity}
-        )
-        if not created:
-            cart_item.quantity += quantity
-            cart_item.save()
-        return cart_item

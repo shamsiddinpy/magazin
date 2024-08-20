@@ -10,5 +10,5 @@ urlpatterns = [
     path('', include(router.urls)),
     path('sign-up', UserRegistrationView.as_view(), name='sign-up'),
     path('cart', CartModelViewSet.as_view(), name='cart'),
-    # path('cart/<int:id>', CartModelViewSet.as_view(), name='cart_id'),
+    # path('cart/<int:id>', CartItemCreateSerializer.as_view(), name='cart_id'),
 ]
